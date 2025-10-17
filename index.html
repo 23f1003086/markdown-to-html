@@ -14,6 +14,12 @@
         #loading {
             display: none;
         }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -21,11 +27,21 @@
 <div class="container">
     <h1>Markdown to HTML Converter</h1>
     <div id="loading" class="alert alert-info">Processing...</div>
-    <div id="markdown-output" class="mt-4"></div>
+    
+    <div id="markdown-tabs" class="mt-4">
+        <button class="btn btn-secondary" onclick="showTab('html')">Rendered HTML</button>
+        <button class="btn btn-secondary" onclick="showTab('markdown')">Markdown Source</button>
+    </div>
+    
+    <div id="markdown-output" class="tab-content active mt-4"></div>
+    <div id="markdown-source" class="tab-content mt-4"></div>
+    
     <hr>
     <h2>Upload Your Markdown File</h2>
     <input type="file" id="file-input" class="form-control" accept=".md">
     <button id="convert-button" class="btn btn-primary mt-2">Convert</button>
+    
+    <div id="markdown-word-count" class="mt-4"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -35,7 +51,9 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const outputDiv = document.getElementById("markdown-output");
+        const sourceDiv = document.getElementById("markdown-source");
         const loadingDiv = document.getElementById("loading");
+        const wordCountDiv = document.getElementById("markdown-word-count");
 
         // Function to fetch and convert markdown file
         function fetchMarkdown() {
@@ -48,9 +66,13 @@
                 .then(markdownText => {
                     const html = marked.parse(markdownText);
                     outputDiv.innerHTML = html;
+                    sourceDiv.textContent = markdownText;
                     loadingDiv.style.display = "none";
                     // Highlight code blocks
                     hljs.highlightAll();
+                    // Update word count
+                    const wordCount = markdownText.split(/\s+/).filter(word => word.length > 0).length;
+                    wordCountDiv.textContent = `Word Count: ${new Intl.NumberFormat().format(wordCount)}`;
                 })
                 .catch(error => {
                     outputDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
@@ -70,9 +92,13 @@
                     const markdownText = event.target.result;
                     const html = marked.parse(markdownText);
                     outputDiv.innerHTML = html;
+                    sourceDiv.textContent = markdownText;
                     loadingDiv.style.display = "none";
                     // Highlight code blocks
                     hljs.highlightAll();
+                    // Update word count
+                    const wordCount = markdownText.split(/\s+/).filter(word => word.length > 0).length;
+                    wordCountDiv.textContent = `Word Count: ${new Intl.NumberFormat().format(wordCount)}`;
                 };
                 reader.onerror = function() {
                     outputDiv.innerHTML = `<div class="alert alert-danger">Error reading file.</div>`;
@@ -83,6 +109,17 @@
                 outputDiv.innerHTML = `<div class="alert alert-warning">Please select a markdown file to upload.</div>`;
             }
         });
+
+        // Function to switch between tabs
+        window.showTab = function(tab) {
+            if (tab === 'html') {
+                outputDiv.classList.add('active');
+                sourceDiv.classList.remove('active');
+            } else {
+                outputDiv.classList.remove('active');
+                sourceDiv.classList.add('active');
+            }
+        };
 
         // Automatically fetch and display the markdown file on page load
         fetchMarkdown();
